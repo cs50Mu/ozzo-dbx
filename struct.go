@@ -5,6 +5,7 @@
 package dbx
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 	"regexp"
@@ -17,7 +18,7 @@ type (
 	FieldMapFunc func(string) string
 
 	// TableMapFunc converts a sample struct into a DB table name.
-	TableMapFunc func(a interface{}) string
+	TableMapFunc func(ctx context.Context, a interface{}) string
 
 	structInfo struct {
 		nameMap   map[string]*fieldInfo // mapping from struct field names to field infos
@@ -80,7 +81,7 @@ func getStructInfo(a reflect.Type, mapper FieldMapFunc) *structInfo {
 	return si
 }
 
-func newStructValue(model interface{}, fieldMapFunc FieldMapFunc, tableMapFunc TableMapFunc) *structValue {
+func newStructValue(ctx context.Context, model interface{}, fieldMapFunc FieldMapFunc, tableMapFunc TableMapFunc) *structValue {
 	value := reflect.ValueOf(model)
 	if value.Kind() != reflect.Ptr || value.Elem().Kind() != reflect.Struct || value.IsNil() {
 		return nil
@@ -89,7 +90,7 @@ func newStructValue(model interface{}, fieldMapFunc FieldMapFunc, tableMapFunc T
 	return &structValue{
 		structInfo: getStructInfo(reflect.TypeOf(model).Elem(), fieldMapFunc),
 		value:      value.Elem(),
-		tableName:  tableMapFunc(model),
+		tableName:  tableMapFunc(ctx, model),
 	}
 }
 
@@ -252,21 +253,22 @@ func indirect(v reflect.Value) reflect.Value {
 // GetTableName implements the default way of determining the table name corresponding to the given model struct
 // or slice of structs. To get the actual table name for a model, you should use DB.TableMapFunc() instead.
 // Do not call this method in a model's TableName() method because it will cause infinite loop.
-func GetTableName(a interface{}) string {
+func GetTableName(ctx context.Context, a interface{}) string {
 	if tm, ok := a.(TableModel); ok {
+		// fmt.Printf("GetTableName, ctx: %+v\n", ctx)
 		v := reflect.ValueOf(a)
 		if v.Kind() == reflect.Ptr && v.IsNil() {
 			a = reflect.New(v.Type().Elem()).Interface()
-			return a.(TableModel).TableName()
+			return a.(TableModel).TableName(ctx)
 		}
-		return tm.TableName()
+		return tm.TableName(ctx)
 	}
 	t := reflect.TypeOf(a)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 	if t.Kind() == reflect.Slice {
-		return GetTableName(reflect.Zero(t.Elem()).Interface())
+		return GetTableName(ctx, reflect.Zero(t.Elem()).Interface())
 	}
 	return DefaultFieldMapFunc(t.Name())
 }

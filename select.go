@@ -50,7 +50,7 @@ type UnionInfo struct {
 }
 
 // NewSelectQuery creates a new SelectQuery instance.
-func NewSelectQuery(builder Builder, db *DB) *SelectQuery {
+func NewSelectQuery(ctx context.Context, builder Builder, db *DB) *SelectQuery {
 	return &SelectQuery{
 		builder:     builder,
 		selects:     []string{},
@@ -61,7 +61,7 @@ func NewSelectQuery(builder Builder, db *DB) *SelectQuery {
 		union:       []UnionInfo{},
 		limit:       -1,
 		params:      Params{},
-		ctx:         db.ctx,
+		ctx:         ctx,
 		FieldMapper: db.FieldMapper,
 		TableMapper: db.TableMapper,
 	}
@@ -289,7 +289,7 @@ func (s *SelectQuery) Build() *Query {
 // Note that when the query has no rows in the result set, an sql.ErrNoRows will be returned.
 func (s *SelectQuery) One(a interface{}) error {
 	if len(s.from) == 0 {
-		if tableName := s.TableMapper(a); tableName != "" {
+		if tableName := s.TableMapper(s.ctx, a); tableName != "" {
 			s.from = []string{tableName}
 		}
 	}
@@ -330,7 +330,7 @@ func (s *SelectQuery) Model(pk, model interface{}) error {
 // or the TableName() method if the slice element implements the TableModel interface.
 func (s *SelectQuery) All(slice interface{}) error {
 	if len(s.from) == 0 {
-		if tableName := s.TableMapper(slice); tableName != "" {
+		if tableName := s.TableMapper(s.ctx, slice); tableName != "" {
 			s.from = []string{tableName}
 		}
 	}

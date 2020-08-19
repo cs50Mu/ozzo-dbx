@@ -4,6 +4,8 @@
 
 package dbx
 
+import "context"
+
 // StandardBuilder is the builder that is used by DB for an unknown driver.
 type StandardBuilder struct {
 	*BaseBuilder
@@ -28,12 +30,12 @@ func (b *StandardBuilder) QueryBuilder() QueryBuilder {
 // Select returns a new SelectQuery object that can be used to build a SELECT statement.
 // The parameters to this method should be the list column names to be selected.
 // A column name may have an optional alias name. For example, Select("id", "my_name AS name").
-func (b *StandardBuilder) Select(cols ...string) *SelectQuery {
-	return NewSelectQuery(b, b.db).Select(cols...)
+func (b *StandardBuilder) Select(ctx context.Context, cols ...string) *SelectQuery {
+	return NewSelectQuery(ctx, b, b.db).Select(cols...)
 }
 
 // Model returns a new ModelQuery object that can be used to perform model-based DB operations.
 // The model passed to this method should be a pointer to a model struct.
-func (b *StandardBuilder) Model(model interface{}) *ModelQuery {
-	return NewModelQuery(model, b.db.FieldMapper, b.db, b)
+func (b *StandardBuilder) Model(ctx context.Context, model interface{}) *ModelQuery {
+	return NewModelQuery(ctx, model, b.db.FieldMapper, b.db, b)
 }

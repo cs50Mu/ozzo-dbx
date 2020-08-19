@@ -10,7 +10,7 @@ import (
 type (
 	// TableModel is the interface that should be implemented by models which have unconventional table names.
 	TableModel interface {
-		TableName() string
+		TableName(context.Context) string
 	}
 
 	// ModelQuery represents a query associated with a struct model.
@@ -29,12 +29,17 @@ var (
 	CompositePKError = errors.New("composite primary key is not supported")
 )
 
-func NewModelQuery(model interface{}, fieldMapFunc FieldMapFunc, db *DB, builder Builder) *ModelQuery {
+func NewModelQuery(ctx context.Context, model interface{}, fieldMapFunc FieldMapFunc, db *DB, builder Builder) *ModelQuery {
 	q := &ModelQuery{
-		db:      db,
-		ctx:     db.ctx,
+		db: db,
+		// TODO: maybe add `ctx` parameter to
+		// all the obj create method:
+		// NewModelQuery / Open / NewQuery / NewSelectQuery
+		// and then remove all the `WithContext` method
+		// ctx:     db.ctx,
+		ctx:     ctx,
 		builder: builder,
-		model:   newStructValue(model, fieldMapFunc, db.TableMapper),
+		model:   newStructValue(ctx, model, fieldMapFunc, db.TableMapper),
 	}
 	if q.model == nil {
 		q.lastError = VarTypeError("must be a pointer to a struct representing the model")

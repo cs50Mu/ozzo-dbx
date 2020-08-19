@@ -5,6 +5,7 @@
 package dbx
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"sort"
@@ -35,14 +36,14 @@ func (b *MysqlBuilder) QueryBuilder() QueryBuilder {
 // Select returns a new SelectQuery object that can be used to build a SELECT statement.
 // The parameters to this method should be the list column names to be selected.
 // A column name may have an optional alias name. For example, Select("id", "my_name AS name").
-func (b *MysqlBuilder) Select(cols ...string) *SelectQuery {
-	return NewSelectQuery(b, b.db).Select(cols...)
+func (b *MysqlBuilder) Select(ctx context.Context, cols ...string) *SelectQuery {
+	return NewSelectQuery(ctx, b, b.db).Select(cols...)
 }
 
 // Model returns a new ModelQuery object that can be used to perform model-based DB operations.
 // The model passed to this method should be a pointer to a model struct.
-func (b *MysqlBuilder) Model(model interface{}) *ModelQuery {
-	return NewModelQuery(model, b.db.FieldMapper, b.db, b)
+func (b *MysqlBuilder) Model(ctx context.Context, model interface{}) *ModelQuery {
+	return NewModelQuery(ctx, model, b.db.FieldMapper, b.db, b)
 }
 
 // QuoteSimpleTableName quotes a simple table name.

@@ -5,6 +5,7 @@
 package dbx
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -22,10 +23,10 @@ type Builder interface {
 	// Select returns a new SelectQuery object that can be used to build a SELECT statement.
 	// The parameters to this method should be the list column names to be selected.
 	// A column name may have an optional alias name. For example, Select("id", "my_name AS name").
-	Select(...string) *SelectQuery
+	Select(context.Context, ...string) *SelectQuery
 	// ModelQuery returns a new ModelQuery object that can be used to perform model insertion, update, and deletion.
 	// The parameter to this method should be a pointer to the model struct that needs to be inserted, updated, or deleted.
-	Model(interface{}) *ModelQuery
+	Model(context.Context, interface{}) *ModelQuery
 
 	// GeneratePlaceholder generates an anonymous parameter placeholder with the given parameter ID.
 	GeneratePlaceholder(int) string
