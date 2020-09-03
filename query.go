@@ -174,18 +174,10 @@ func (q *Query) Execute() (result sql.Result, err error) {
 
 	start := time.Now()
 
-	if q.ctx == nil {
-		if q.stmt == nil {
-			result, err = q.executor.Exec(q.rawSQL, params...)
-		} else {
-			result, err = q.stmt.Exec(params...)
-		}
+	if q.stmt == nil {
+		result, err = q.executor.Exec(q.rawSQL, params...)
 	} else {
-		if q.stmt == nil {
-			result, err = q.executor.ExecContext(q.ctx, q.rawSQL, params...)
-		} else {
-			result, err = q.stmt.ExecContext(q.ctx, params...)
-		}
+		result, err = q.stmt.Exec(params...)
 	}
 
 	if q.ExecLogFunc != nil {
@@ -262,18 +254,11 @@ func (q *Query) Rows() (rows *Rows, err error) {
 	start := time.Now()
 
 	var rr *sql.Rows
-	if q.ctx == nil {
-		if q.stmt == nil {
-			rr, err = q.executor.Query(q.rawSQL, params...)
-		} else {
-			rr, err = q.stmt.Query(params...)
-		}
+
+	if q.stmt == nil {
+		rr, err = q.executor.Query(q.rawSQL, params...)
 	} else {
-		if q.stmt == nil {
-			rr, err = q.executor.QueryContext(q.ctx, q.rawSQL, params...)
-		} else {
-			rr, err = q.stmt.QueryContext(q.ctx, params...)
-		}
+		rr, err = q.stmt.Query(params...)
 	}
 	rows = &Rows{rr, q.FieldMapper}
 
